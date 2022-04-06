@@ -1,21 +1,16 @@
-import fs from "fs";
-import { PNG } from "pngjs";
-import tf from '@tensorflow/tfjs-node';
-import Mnist from "./classes/Mnist.js";
-
-
+import tf from "@tensorflow/tfjs-node";
+import MnistFileLoader from "./classes/MnistFileLoader.js";
 let model = null;
 
-
-
-let mnist = new Mnist(200, 200);
-mnist.load();
+let mfl = new MnistFileLoader(1000, 100);
+mfl.readMNIST();
 
 training();
 
 function training() {
-    let [x,y]= mnist.getTrainData();
-    x=x.reshape([mnist.nTrain, 784]);
+    let [x,y]= mfl.getTrainData();
+    x=x.reshape([mfl.nTrain, 784]);
+    console.log(y.arraySync());
     model = tf.sequential();
     let singleLayer = tf.layers.dense({
         units: 10,
@@ -30,14 +25,44 @@ function training() {
         loss: 'meanSquaredError'
     });
 
-    let epochs = 200;
+    let epochs = 100;
     model.fit(x, y, {
         batchSize: 10,
         epochs: epochs,
-        callbacks: {
-            onEpochBegin: (epoch) => console.log(`model.fit: starting epoch ${(epoch + 1)}/${epochs}`)
+    }).then(() => {
+        model.save('file://./my-model');
+        testing();
+    }).catch(e => console.log(e));
+}
+
+async function load() {
+    return  await tf.loadLayersModel('file://./my-model/model.json');
+}
+
+function testing() {
+    let testSize = mfl.nTest;
+    console.log(testSize);
+    let [xtest,ytest] = mfl.getTestData(testSize);
+    xtest=xtest.reshape([testSize,784]);
+    let pred = model.predict(xtest);
+    let predArr = pred.arraySync();
+    let labelArr = ytest.arraySync();
+    let correctCount = 0;
+    for (let i = 0; i < predArr.length; i++) {
+        const predictionVal = to(predArr[i]);
+        const label = to(labelArr[i]);
+        if (predictionVal === label) {
+            correctCount++;
         }
-    }).then(() => console.log('finished')).catch(e => console.log(e));
+        console.log(`prediction is: ${predictionVal}, label was: ${label}`);
+        console.log('------');
+    }
+    console.log(`Predicted ${correctCount}/${testSize}`);
+}
+
+function to(arr) {
+    const max = Math.max(...arr);
+    return arr.indexOf(max);
 }
 
 // var download = function(uri, filename, callback){

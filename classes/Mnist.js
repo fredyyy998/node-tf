@@ -1,6 +1,8 @@
 import fs from "fs";
 import { PNG } from "pngjs";
 import tf from "@tensorflow/tfjs-node";
+import pkg from 'canvas';
+const {createCanvas} = pkg;
 
 const MNIST_IMAGES_SPRITE_PATH =
     'https://storage.googleapis.com/learnjs-data/model-builder/mnist_images.png';
@@ -26,9 +28,8 @@ export default class Mnist {
         let labels = fs.readFileSync('labels');
         let datasetLabels = new Uint8Array(labels)
         let data = fs.readFileSync('google.png');
-        let png = PNG.sync.read(data);
 
-        // It would be nice with a checker instead of a hard coded 60000 limit here
+        data = data.slice(8);
         for (let image = 0; image <= N_DATA - 1; image++) {
             let pixels = [];
 
@@ -46,6 +47,7 @@ export default class Mnist {
         this.trainLabels = labelValues.slice(0, N_CLASSES * this.nTrain)
         this.testLabels = labelValues.slice(N_CLASSES * this.nTrain, N_CLASSES * (this.nTrain+this.nTest))
     }
+
     getTrainData() {
         const x_train = tf.tensor4d(
             this.trainImages,
