@@ -41,7 +41,6 @@ async function load() {
 
 function testing() {
     let testSize = mfl.nTest;
-    console.log(testSize);
     let [xtest,ytest] = mfl.getTestData(testSize);
     xtest=xtest.reshape([testSize,784]);
     let pred = model.predict(xtest);

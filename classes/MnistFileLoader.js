@@ -45,16 +45,18 @@ export default class MnistFileLoader {
     getTrainData() {
         const x_train = tf.tensor4d(
             this.trainImages,
-            [this.trainImages.length / IMAGE_SIZE, IMAGE_H, IMAGE_W, 1])
+            [this.trainImages.length / IMAGE_SIZE, IMAGE_H, IMAGE_W, 1]);
         const y_train = tf.tensor2d(
             this.trainLabels, [this.trainLabels.length / N_CLASSES, N_CLASSES])
         return [x_train, y_train]
     }
 
     getTestData(numExamples) {
+        console.log(this.testImages);
         let x_test = tf.tensor4d(
             this.testImages,
-            [this.testImages.length / IMAGE_SIZE, IMAGE_H, IMAGE_W, 1])
+            [this.testImages.length / IMAGE_SIZE, IMAGE_H, IMAGE_W, 1]);
+
         let y_test = tf.tensor2d(
             this.testLabels, [this.testLabels.length / N_CLASSES, N_CLASSES])
 
@@ -65,28 +67,23 @@ export default class MnistFileLoader {
         return [x_test, y_test]
     }
 
-    saveMNIST(start, end) {
+    saveMNIST(index, pixelValues, label) {
         const canvas = createCanvas(28, 28);
         const ctx = canvas.getContext('2d');
 
-        var pixelValues = readMNIST(start, end);
-
-        pixelValues.forEach(function(image)
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (var y = 0; y <= 27; y++)
         {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (var y = 0; y <= 27; y++)
+            for (var x = 0; x <= 27; x++)
             {
-                for (var x = 0; x <= 27; x++)
-                {
-                    var pixel = image.pixels[x + (y * 28)];
-                    var colour = 255 - pixel;
-                    ctx.fillStyle = `rgb(${colour}, ${colour}, ${colour})`;
-                    ctx.fillRect(x, y, 1, 1);
-                }
+                var pixel = pixelValues[x + (y * 28)];
+                var colour = 255 - pixel;
+                ctx.fillStyle = `rgb(${colour}, ${colour}, ${colour})`;
+                ctx.fillRect(x, y, 1, 1);
             }
-            const buffer = canvas.toBuffer('image/png')
-            fs.writeFileSync(`.\\images\\image${image.index}-${image.label}.png`, buffer)
-        })
+        }
+        const buffer = canvas.toBuffer('image/png')
+        fs.writeFileSync(`.\\images\\image${index}-label${label}.png`, buffer)
     }
 
     // this is shitty but i don't get the real way
